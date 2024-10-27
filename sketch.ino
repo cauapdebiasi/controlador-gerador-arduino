@@ -59,7 +59,7 @@ void loop() {
     // Só vai passar se o botão da partida estiver ligado
     if (valBotaoComandoPartida) {
       if (!combustivelLiberado) {
-        millisLiberacaoCombustivel = millis(); // Atualiza o valor assim que o botão é pressionado
+        millisLiberacaoCombustivel = agora; // Atualiza o valor assim que o botão é pressionado
         digitalWrite(RELE_COMBUSTIVEL, HIGH);
         combustivelLiberado = true; // Depois, atualiza o estado
       }
@@ -69,10 +69,9 @@ void loop() {
         partidaLigada = false;
       } else {
         if (tentativasPartida < 3) {
-
           if (!partidaLigada) {
-            if ((tentativasPartida == 0 || (agora - millisEsperaEntrePartida) > 10000) && (agora - millisLiberacaoCombustivel) > 1000) {
-              millisInicioPartida = millis();
+            if ((agora - millisLiberacaoCombustivel) > 1000 && (tentativasPartida == 0 || (agora - millisEsperaEntrePartida) > 10000)) {
+              millisInicioPartida = agora;
               digitalWrite(RELE_PARTIDA, HIGH);
               partidaLigada = true;
             }
@@ -81,18 +80,16 @@ void loop() {
             if ((agora - millisInicioPartida) > 3000) {
               digitalWrite(RELE_PARTIDA, LOW);
               partidaLigada = false;
-              millisEsperaEntrePartida = millis();
+              millisEsperaEntrePartida = agora;
               tentativasPartida++;
             }
           }
-
         }
       }
       // Espera um segundo depois da liberação de combustível antes de dar a partida
     } else { // Caso o botão seja desligado, resetar os parâmetros e desliga os relês
       millisLiberacaoCombustivel = 0;
       millisInicioPartida = 0;
-      millisEsperaEntrePartida = 0;
       digitalWrite(RELE_COMBUSTIVEL, LOW);
       digitalWrite(RELE_PARTIDA, LOW);
       combustivelLiberado = false;
