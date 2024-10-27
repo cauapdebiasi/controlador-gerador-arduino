@@ -101,5 +101,84 @@ void loop() {
     }
   } else { // MODO AUTOMATICO
     Serial.println("MODO AUTOMATICO");
+    static bool ruaEstavel = true;
+    static unsigned long millisUltimaQuedaEnergia = 0;
+    int valMonitorRua = digitalRead(MONITOR_RUA);
+    int valMonitorGerador = digitalRead(MONITOR_GERADOR);
+
+    if (valMonitorGerador) {
+      geradorLigado = true;
+    } else {
+      geradorLigado = false;
+    }
+
+    if (valMonitorRua) {
+      if (ruaEstavel) {
+        chavearParaRua(agora);
+        digitalWrite(RELE_COMBUSTIVEL, LOW);
+        digitalWrite(RELE_PARTIDA, LOW);
+      } else {
+        if ((agora - millisUltimaQuedaEnergia) > 5000) {
+          ruaEstavel = true;
+        }
+      }
+    } else {
+      ruaEstavel = false;
+      millisUltimaQuedaEnergia = agora;
+      digitalWrite(RELE_RUA, LOW);
+
+      // O combustivelLiberado serve pra garantir que o gerador não esteja sendo ligado por um fantasma
+      if (geradorLigado && combustivelLiberado) {
+        chavearParaGerador(agora);
+        digitalWrite(RELE_PARTIDA, LOW);
+        partidaLigada = false;
+        tentativasPartida = 0;
+      } else {
+
+        if (!combustivelLiberado) {
+          millisLiberacaoCombustivel = agora; // Atualiza o valor assim que o botão é pressionado
+          digitalWrite(RELE_COMBUSTIVEL, HIGH);
+          combustivelLiberado = true; // Depois, atualiza o estado
+        }
+
+        if (tentativasPartida < 3) {
+          if (!partidaLigada) {
+            if ((agora - millisLiberacaoCombustivel) > 1000 && (tentativasPartida == 0 || (agora - millisEsperaEntrePartida) > 10000)) {
+              millisInicioPartida = agora;
+              digitalWrite(RELE_PARTIDA, HIGH);
+              partidaLigada = true;
+            }
+          } else {
+            // Mantém a partida ligada durante 3 segundos e desliga após
+            if ((agora - millisInicioPartida) > 3000) {
+              digitalWrite(RELE_PARTIDA, LOW);
+              partidaLigada = false;
+              millisEsperaEntrePartida = agora;
+              tentativasPartida++;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void chavearParaRua(unsigned long millisAgora) {
+
+  static unsigned long millisGeradorDesligado = millis();
+  digitalWrite(RELE_GERADOR, LOW);
+
+  if ((millisAgora - millisGeradorDesligado) > 500) {
+    digitalWrite(RELE_RUA, HIGH);
+  }
+}
+
+void chavearParaGerador(unsigned long millisAgora) {
+
+  static unsigned long millisRuaDesligado = millis();
+  digitalWrite(RELE_RUA, LOW);
+
+  if ((millisAgora - millisRuaDesligado) > 500) {
+    digitalWrite(RELE_GERADOR, HIGH);
   }
 }
