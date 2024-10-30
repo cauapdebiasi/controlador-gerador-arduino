@@ -114,10 +114,18 @@ void loop() {
         chavearParaRua(agora);
         digitalWrite(RELE_COMBUSTIVEL, LOW);
         digitalWrite(RELE_PARTIDA, LOW);
+        combustivelLiberado = false;
+        partidaLigada = false;
+        tentativasPartida = 0;
       } else {
         if ((agora - millisUltimaQuedaEnergia) > 5000) {
           ruaEstavel = true;
         }
+      }
+      // Garante que a partida seja desligada após os três segundos caso a rua volte
+      if ((agora - millisInicioPartida) > 3000) {
+        digitalWrite(RELE_PARTIDA, LOW);
+        partidaLigada = false;
       }
     } else {
       ruaEstavel = false;
