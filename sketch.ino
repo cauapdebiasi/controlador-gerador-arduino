@@ -21,6 +21,16 @@ void setup() {
 
   Serial.begin(9600);
   // put your setup code here, to run once:
+  inicializarControlador();
+}
+
+void loop() {
+  unsigned long agora = millis();
+
+  atualizarControlador(agora);
+}
+
+void inicializarControlador() {
   pinMode(RELE_RUA, OUTPUT);
   pinMode(RELE_GERADOR, OUTPUT);
   pinMode(RELE_COMBUSTIVEL, OUTPUT);
@@ -33,9 +43,7 @@ void setup() {
   pinMode(BOTAO_COMANDO_PARTIDA, INPUT);
 }
 
-void loop() {
-  unsigned long agora = millis();
-
+void atualizarControlador(unsigned long millisAgora) {
   // MODO MANUAL
   if (digitalRead(BOTAO_MODO)) {
     Serial.println("MODO MANUAL");
@@ -59,7 +67,7 @@ void loop() {
     // Só vai passar se o botão da partida estiver ligado
     if (valBotaoComandoPartida) {
       if (!combustivelLiberado) {
-        millisLiberacaoCombustivel = agora; // Atualiza o valor assim que o botão é pressionado
+        millisLiberacaoCombustivel = millisAgora; // Atualiza o valor assim que o botão é pressionado
         digitalWrite(RELE_COMBUSTIVEL, HIGH);
         combustivelLiberado = true; // Depois, atualiza o estado
       }
@@ -70,17 +78,17 @@ void loop() {
       } else {
         if (tentativasPartida < 3) {
           if (!partidaLigada) {
-            if ((agora - millisLiberacaoCombustivel) > 1000 && (tentativasPartida == 0 || (agora - millisEsperaEntrePartida) > 10000)) {
-              millisInicioPartida = agora;
+            if ((millisAgora - millisLiberacaoCombustivel) > 1000 && (tentativasPartida == 0 || (millisAgora - millisEsperaEntrePartida) > 10000)) {
+              millisInicioPartida = millisAgora;
               digitalWrite(RELE_PARTIDA, HIGH);
               partidaLigada = true;
             }
           } else {
             // Mantém a partida ligada durante 3 segundos e desliga após
-            if ((agora - millisInicioPartida) > 3000) {
+            if ((millisAgora - millisInicioPartida) > 3000) {
               digitalWrite(RELE_PARTIDA, LOW);
               partidaLigada = false;
-              millisEsperaEntrePartida = agora;
+              millisEsperaEntrePartida = millisAgora;
               tentativasPartida++;
             }
           }
@@ -111,14 +119,14 @@ void loop() {
 
     if (valMonitorRua) {
       if (ruaEstavel) {
-        chavearParaRua(agora);
+        chavearParaRua(millisAgora);
         digitalWrite(RELE_COMBUSTIVEL, LOW);
         digitalWrite(RELE_PARTIDA, LOW);
         combustivelLiberado = false;
         partidaLigada = false;
         tentativasPartida = 0;
       } else {
-        if ((agora - millisUltimaQuedaEnergia) > 5000) {
+        if ((millisAgora - millisUltimaQuedaEnergia) > 5000) {
           ruaEstavel = true;
         }
       }
@@ -129,36 +137,36 @@ void loop() {
       }
     } else {
       ruaEstavel = false;
-      millisUltimaQuedaEnergia = agora;
+      millisUltimaQuedaEnergia = millisAgora;
       digitalWrite(RELE_RUA, LOW);
 
       // O combustivelLiberado serve pra garantir que o gerador não esteja sendo ligado por um fantasma
       if (geradorLigado && combustivelLiberado) {
-        chavearParaGerador(agora);
+        chavearParaGerador(millisAgora);
         digitalWrite(RELE_PARTIDA, LOW);
         partidaLigada = false;
         tentativasPartida = 0;
       } else {
 
         if (!combustivelLiberado) {
-          millisLiberacaoCombustivel = agora; // Atualiza o valor assim que o botão é pressionado
+          millisLiberacaoCombustivel = millisAgora; // Atualiza o valor assim que o botão é pressionado
           digitalWrite(RELE_COMBUSTIVEL, HIGH);
           combustivelLiberado = true; // Depois, atualiza o estado
         }
 
         if (tentativasPartida < 3) {
           if (!partidaLigada) {
-            if ((agora - millisLiberacaoCombustivel) > 1000 && (tentativasPartida == 0 || (agora - millisEsperaEntrePartida) > 10000)) {
-              millisInicioPartida = agora;
+            if ((millisAgora - millisLiberacaoCombustivel) > 1000 && (tentativasPartida == 0 || (millisAgora - millisEsperaEntrePartida) > 10000)) {
+              millisInicioPartida = millisAgora;
               digitalWrite(RELE_PARTIDA, HIGH);
               partidaLigada = true;
             }
           } else {
             // Mantém a partida ligada durante 3 segundos e desliga após
-            if ((agora - millisInicioPartida) > 3000) {
+            if ((millisAgora - millisInicioPartida) > 3000) {
               digitalWrite(RELE_PARTIDA, LOW);
               partidaLigada = false;
-              millisEsperaEntrePartida = agora;
+              millisEsperaEntrePartida = millisAgora;
               tentativasPartida++;
             }
           }
@@ -187,3 +195,4 @@ void chavearParaGerador(unsigned long millisAgora) {
     digitalWrite(RELE_GERADOR, HIGH);
   }
 }
+
