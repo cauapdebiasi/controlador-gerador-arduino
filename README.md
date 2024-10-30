@@ -2,6 +2,8 @@
 
 Este projeto consiste em um sistema de controle automático para monitorar a disponibilidade da rede elétrica e, em caso de falha, acionar um gerador de forma segura e confiável, utilizando a plataforma Arduino. O sistema foi desenvolvido para aplicações em locais onde a continuidade da energia é essencial e utiliza uma estrutura de intertravamento para evitar acidentes, curto-circuitos ou sobrecargas.
 
+Acesso ao diagrama de circuito: [wokwi](https://wokwi.com/projects/412671888044635137)
+
 ## Funcionalidades
 - **Monitoramento da rede elétrica e do gerador**: Utiliza sensores para verificar a presença de tensão tanto na rede principal quanto no gerador.
 - **Ação automática**: Em caso de falha na rede principal, o sistema libera combustível, inicia o gerador e realiza o chaveamento entre as fontes de energia.
